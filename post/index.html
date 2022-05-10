@@ -6,13 +6,15 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    
 
     <title>Posts | Damon的博客</title>
     <meta property="og:title" content="Posts - Damon的博客">
     <meta property="og:type" content="article">
         
         
-    <meta name="Keywords" content="">
+    <meta name="Keywords" content="golang,go语言,go语言笔记,Damon,java,博客,项目管理,python">
     <meta name="description" content="Posts">
         
     <meta name="author" content="Damon">
@@ -21,7 +23,7 @@
 
     <link rel="stylesheet" href='/css/normalize.css'>
     <link rel="stylesheet" href='/css/style.css'>
-    <link rel="alternate" type="application/rss+xml" href="https://damon-dai.github.io/post/feed.xml" title="Damon的博客" />
+    <link rel="alternate" type="application/rss+xml" href="https://damon-dai.github.io/post/index.xml" title="Damon的博客" />
     <script type="text/javascript" src="//cdn.bootcdn.net/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 
     
@@ -29,6 +31,10 @@
     
     
     
+    
+        <link rel="stylesheet" href='/css/douban.css'>
+    
+        <link rel="stylesheet" href='/css/other.css'>
     
 </head>
 
@@ -42,15 +48,17 @@
                         Damon的博客
                     </a>
                 
-                <p class="description">Talk is cheap,show me code.</p>
+                <p class="description">骑马喝酒走四方</p>
             </div>
             <div>
                 <nav id="nav-menu" class="clearfix">
                     <a class="current" href="https://damon-dai.github.io">首页</a>
                     
-                    <a  href="https://damon-dai.github.io/" title="首页">首页</a>
+                    <a  href="https://damon-dai.github.io/tools/" title="工具">工具</a>
                     
-                    <a  href="https://damon-dai.github.io/about" title="关于">关于</a>
+                    <a  href="https://damon-dai.github.io/archives/" title="归档">归档</a>
+                    
+                    <a  href="https://damon-dai.github.io/about/" title="关于">关于</a>
                     
                 </nav>
             </div>
@@ -70,17 +78,17 @@
     <article class="post">
         <header>
             <h1 class="post-title">
-                <a href="https://damon-dai.github.io/post/my-first-post/" title="第一篇">第一篇</a>
+                <a href="https://damon-dai.github.io/post/tcc%E4%B8%80%E8%87%B4%E6%80%A7/" title="数据一致性及tcc的简单介绍">数据一致性及tcc的简单介绍</a>
             </h1>
         </header>
         <date class="post-meta meta-date">
-            2022年5月1日
+            2022年5月10日
         </date>
         
         <div class="post-content">
-            func main() { } ……
+            对于业务数据，什么是正确的状态。 一般来说业务数据的正确状态是有限的几种状态。 例如订单，包含数个到数十个字段。有这样几个：未支付，已支付，已发货。。。 其实代码逻辑对订单数据的操作也无非是 从一个正确的状态转换到另外一个正确的状态。 例如，从未支付-&gt;已经支付。 当然，有些转化根据业……
         </div>
-        <p class="readmore"><a href="https://damon-dai.github.io/post/my-first-post/">阅读全文</a></p>
+        <p class="readmore"><a href="https://damon-dai.github.io/post/tcc%E4%B8%80%E8%87%B4%E6%80%A7/">阅读全文</a></p>
     </article>
     
     
@@ -115,14 +123,18 @@
 
 <a id="rocket" href="#top"></a>
 <script type="text/javascript" src='/js/totop.js?v=0.0.0' async=""></script>
+    <script type="text/javascript" src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script>
 
 
+
+
+    <script src='/js/douban.js'></script>
 
                 </div>
 
                 <div id="secondary">
     <section class="widget">
-        <form id="search" action='//www.google.com/search' method="get" accept-charset="utf-8" target="_blank" _lpchecked="1">
+        <form id="search" action='https://damon-dai.github.io/search/' method="get" accept-charset="utf-8" target="_blank" _lpchecked="1">
       
       <input type="text" name="q" maxlength="20" placeholder="Search">
       <input type="hidden" name="sitesearch" value="https://damon-dai.github.io">
@@ -135,7 +147,7 @@
 <ul class="widget-list">
     
     <li>
-        <a href="https://damon-dai.github.io/post/my-first-post/" title="第一篇">第一篇</a>
+        <a href="https://damon-dai.github.io/post/tcc%E4%B8%80%E8%87%B4%E6%80%A7/" title="数据一致性及tcc的简单介绍">数据一致性及tcc的简单介绍</a>
     </li>
     
 </ul>
@@ -158,6 +170,21 @@
     </section>
 
     
+<section class="widget">
+    <h3 class="widget-title">友情链接</h3>
+    <ul class="widget-list">
+        
+        <li>
+            <a target="_blank" href="http://www.dbh6.cn/" title="Damon的博客">damon的博客</a>
+        </li>
+        
+        <li>
+            <a target="_blank" href="http://yuedu.baidu.com/ebook/14a722970740be1e640e9a3e" title="Android Gradle权威指南">Android Gradle权威指南</a>
+        </li>
+        
+    </ul>
+</section>
+
 
     <section class="widget">
         <h3 class="widget-title">其它</h3>

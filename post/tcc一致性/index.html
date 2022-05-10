@@ -9,20 +9,20 @@
     <meta name="referrer" content="no-referrer-when-downgrade">
     
 
-    <title>第一篇 | Damon的博客</title>
-    <meta property="og:title" content="第一篇 - Damon的博客">
+    <title>数据一致性及tcc的简单介绍 | Damon的博客</title>
+    <meta property="og:title" content="数据一致性及tcc的简单介绍 - Damon的博客">
     <meta property="og:type" content="article">
         
-    <meta property="article:published_time" content='2022-05-01T09:32:05&#43;08:00'>
+    <meta property="article:published_time" content='2022-05-10T16:07:07&#43;08:00'>
         
         
-    <meta property="article:modified_time" content='2022-05-01T09:32:05&#43;08:00'>
+    <meta property="article:modified_time" content='2022-05-10T16:07:07&#43;08:00'>
         
     <meta name="Keywords" content="golang,go语言,go语言笔记,Damon,java,博客,项目管理,python">
-    <meta name="description" content="第一篇">
+    <meta name="description" content="数据一致性及tcc的简单介绍">
         
     <meta name="author" content="Damon">
-    <meta property="og:url" content="https://damon-dai.github.io/post/my-first-post/">
+    <meta property="og:url" content="https://damon-dai.github.io/post/tcc%E4%B8%80%E8%87%B4%E6%80%A7/">
     <link rel="shortcut icon" href='/favicon.ico'  type="image/x-icon">
 
     <link rel="stylesheet" href='/css/normalize.css'>
@@ -140,7 +140,15 @@
 <div class="post-toc" style="position: absolute; top: 188px;">
     <h2 class="post-toc-title">文章目录</h2>
     <div class="post-toc-content">
-        <nav id="TableOfContents"></nav>
+        <nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
     </div>
 </div>
 <script type="text/javascript">
@@ -176,10 +184,10 @@
 </script>
     <article class="post">
         <header>
-            <h1 class="post-title">第一篇</h1>
+            <h1 class="post-title">数据一致性及tcc的简单介绍</h1>
         </header>
         <date class="post-meta meta-date">
-            2022年5月1日
+            2022年5月10日
         </date>
         
         
@@ -190,26 +198,78 @@
         
         
         <div class="post-content">
-            <div class="highlight"><div style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
-<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
-</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2
-</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3
-</span></code></pre></td>
-<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#000;font-weight:bold">func</span> <span style="color:#900;font-weight:bold">main</span>() {
-</span></span><span style="display:flex;"><span>	
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></td></tr></table>
-</div>
-</div>
+            <h4 id="对于业务数据什么是正确的状态">对于业务数据，什么是正确的状态。</h4>
+<p>一般来说业务数据的正确状态是有限的几种状态。</p>
+<p>例如订单，包含数个到数十个字段。有这样几个：未支付，已支付，已发货。。。</p>
+<p>其实代码逻辑对订单数据的操作也无非是</p>
+<p>从一个正确的状态转换到另外一个正确的状态。</p>
+<p>例如，从未支付-&gt;已经支付。</p>
+<p>当然，有些转化根据业务逻辑是禁止的，例如，一般来说不能这样：已发货-&gt;未支付。这会造成数据，业务的混乱。</p>
+<p>每次转换状态的时候，都有必要检查当前状态。</p>
+<p>更复杂一点，订单使用了红包。那么就要考虑订单数据和红包数据的正确状态，</p>
+<p>例如在某宝的下单逻辑中，1如果订单下成功了但未支付，那么红包的状态就要改变成挂起（或者叫做锁定）。2 如果支付成功了。红包变成已经使用。</p>
+<p><strong>错误的例子</strong>：</p>
+<p>如果订单下单了，红包状态是未使用。那么就是错的了，因为红包还可以被重复使用。这也会造成数据的混乱。</p>
+<p>总结：当订单的状态变化，红包的状态就根据业务逻辑和订单状态保持一致。</p>
+<p>订单可以变得更加复杂，例如如果订单使用了红包，积分，u币几种资源，再加上下单还会赠送一些资源，例如幸福币。</p>
+<p>单机业务系统中。一般使用事务保证一致性。</p>
+<p>也就是在操作订单，红包，积分，u币，幸福币的时候，都放在一个事务里面，要么全部成功，要么失败回滚。</p>
+<p>那么，分布式的微服务环境中。就不一样了。因为u币服务是独立的，积分服务是独立的，</p>
+<p>红包服务是独立的，幸福币服务是独立的。订单服务是独立的。下一个单要调用多个服务的接口才能完成。</p>
+<p>这些服务都是用不同的数据库实例。</p>
+<p>甚至数据库的种类也不一样，例如有的用mysql，有的用postgresql，甚至有的用nosql数据库。</p>
+<p>是无法利用数据库的事务来保证跨库操作一致性的。</p>
+<p>所以，退而就其次，追求数据最终一致性，而不是任何时候都是一致。参考CAP理论。</p>
+<p>鱼和熊掌不可兼得。CAP理论决定了在分布式环境中，服务可用性，数据强一致性只能二选一。</p>
+<p>数据最终一致性，意味着</p>
+<p>会有一段时间数据处于不一致的状态，但是我们通过一些手段，让数据最终达到一致。而且在不一致的这段时间里，还不会造成业务大混乱。</p>
+<p>例子： 订单支付成功回调后，调用红包接口将红包设置为已使用，红包服务不稳定，或者宕机半小时。在这半小时内，红包的状态仍然处于锁定中，其实是个错误的状态。</p>
+<p>后续要用脚本补偿做到最终一致性。但是这半个小时中，虽然红包的状态不对，但是此红包不会被重复使用。这就保证业务不会出大的问题。</p>
+<p>考虑这个例子，下订单可以使用积分，u币，同时下单还可以赠送幸福币。幸福币服务是个独立的服务，只能通过接口调用。  下单的时候会出现哪些问题呢？</p>
+<p>1） 检查积分足够，检查u币足够。 幸福币预算足够。显示给用户看。   然后扣积分成功，扣u币失败（例如因为u币同时在其他的业务有消耗，例如自动博彩机，或者两个手机同时下单）</p>
+<p>这时候要回滚积分。要注意，接口要保证只能回滚一次（即使调用方因为bug调了多次）。</p>
+<p>2 ）考虑更复杂的情况</p>
+<p>检查积分足够，检查u币足够。 幸福币预算足够。显示给用户看。   然后扣积分成功，扣u币成功，赠送幸福币成功，下单失败（例如无库存了，或者连不上订单中心，任何问题总有可能发生）</p>
+<p>。这时候回滚积分成功，回滚u币成功，回滚幸福币失败，这下麻烦来了。因为幸福币刚才瞬间被别的地方用掉了（例如幸福币换手纸活动正在进行）。无法回滚。让用户占了便宜。</p>
+<p>这种情况可能发生的概率不大。但是可能会发生。一旦发生。例如在后续的对账，成本核算中，发现订单数据和幸福币数据对不上，有出入。也无从找到是哪个地方的数据错了。虽然错误的数据不多，给人的感觉就是系统不靠谱，担忧以后会不会哪天发生很大的数据错误。这样的系统无法让人放心。如果系统大。例如大型电商系统。一个微小的问题可能就会涉及到几千上万，甚至数十万的订单。这些问题的解决方案不熟练掌握，是不能够设计大型系统的。</p>
+<p>如何解决，给幸福币的赠送使用一个新的模式。</p>
+<p>2 tcc模式的应用</p>
+<p>t = try 。 经惠做的红包的锁定其实就是这个阶段。也可以叫做挂起，锁定。</p>
+<p>c = cancle 。就是回滚。</p>
+<p>c = confirm  。 就是确认。类似数据库事务的提交。</p>
+<p>赠送幸福币的流程中，幸福币服务要提供三个接口。</p>
+<p>try。锁定幸福币，就是从预算池中拿出n个幸福币，暂存到一个地方。暂定的幸福币还不属于用户所以无法被使用，也不属于预算池所以也不能被赠送给其他用户，是一个中间状态。也可以叫做锁定。或者挂起。</p>
+<p>cancel。回滚幸福币，就是把刚刚暂存的幸福币返回给预算池。</p>
+<p>confirm。确认赠送幸福币。就是把刚刚暂存的幸福币达到用户的账户上去。</p>
+<p>这样，就会解决刚刚幸福币无法回滚的问题。</p>
+<p>tcc体现出来的主要特点解决问题。1已确认的数据不能回滚，例如给到用户的幸福币不能倒退，因为可能还没有来得及退的时候被用户消费掉了，但是中间状态的可以回滚。2 保证只能回滚一次。如果因为代码bug回滚了多次，那就造成财产的损失。错误的回滚第二次的时候，</p>
+<p>发现暂存数据没有了。也自然无法重复回滚。</p>
+<p>红包，积分，xx币等一般都需要用这个模式。</p>
+<p>tcc的时候如果发生问题如何处理：</p>
+<p>1 try失败，如何处理，一般意味着资源不可用，例如红包不可用，积分不够，u币不够。后续根据业务逻辑处理就行了。</p>
+<p>2 cancel失败。</p>
+<p>3 confirm失败。</p>
+<p>上述2,3两个失败，导致资源一直处于锁定的状态。</p>
+<p>如果订单都成功了。confirm某个try过的资源失败（网络异常）。要走完下单流程。</p>
+<p>后续用脚本补偿。例如检查到一部分积分锁定，锁定的操作号对应的订单是成功的。那么就直接执行confirm。</p>
+<p>如果订单是失败的后，操作cancel失败了。那么后续脚本会发现，这部分锁定的积分，锁定的操作号对应的订单是没有的，或者失败的状态。那么执行cancel就可以了。</p>
+<p>这个例子中，操作号完全可以用订单号充当。</p>
+<p>3 不能漏掉，也不能重复</p>
+<p>幂等的接口。</p>
+<p>例如多次try积分。同一个订单中真的多次try会导致积分可能不够。</p>
+<p>所以，统一订单，只try一次就行了，第二次就直接返回成功</p>
+<p>4 操作号例子：操作号类似一把操作数据的钥匙，做操作的时候获取操作号，回滚的时候要把操作号带过来，否则就会造成乱回滚。例子：红包上锁解锁。</p>
+<p>下单的时候try，把红包转变为锁定状态。最好也只能在这里解锁。如果另一处代码有bug，解锁的时候写错了红包，把这个红包解锁了。支付回调的时候，就无法confirm红包。</p>
+<p>导致红包仍然是未使用。</p>
+<h5 id="思考题每月赠送红包应该怎么设计">思考题？每月赠送红包应该怎么设计。</h5>
+
         </div>
 
         
 <div class="post-archive">
     <ul class="post-copyright">
         <li><strong>原文作者：</strong><a rel="author" href="https://damon-dai.github.io">Damon</a></li>
-        <li style="word-break:break-all"><strong>原文链接：</strong><a href="https://damon-dai.github.io/post/my-first-post/">https://damon-dai.github.io/post/my-first-post/</a></li>
+        <li style="word-break:break-all"><strong>原文链接：</strong><a href="https://damon-dai.github.io/post/tcc%E4%B8%80%E8%87%B4%E6%80%A7/">https://damon-dai.github.io/post/tcc%E4%B8%80%E8%87%B4%E6%80%A7/</a></li>
         <li><strong>版权声明：</strong>本作品采用<a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/">知识共享署名-非商业性使用-禁止演绎 4.0 国际许可协议</a>进行许可，非商业转载请注明出处（作者，原文链接），商业转载请联系作者获得授权。</li>
     </ul>
 </div>
@@ -333,10 +393,6 @@
     
     <li>
         <a href="https://damon-dai.github.io/post/tcc%E4%B8%80%E8%87%B4%E6%80%A7/" title="数据一致性及tcc的简单介绍">数据一致性及tcc的简单介绍</a>
-    </li>
-    
-    <li>
-        <a href="https://damon-dai.github.io/post/my-first-post/" title="第一篇">第一篇</a>
     </li>
     
 </ul>
